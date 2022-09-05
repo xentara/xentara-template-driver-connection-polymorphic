@@ -32,7 +32,7 @@ auto TemplateOutput::loadConfig(const ConfigIntializer &initializer,
 			// Create the handler
 			_handler = createHandler(value);
 		}
-		/// @todo load configuration parameters
+		/// @todo load custom configuration parameters
 		else if (name == u8"TODO"sv)
 		{
 			/// @todo parse the value correctly
