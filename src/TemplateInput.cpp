@@ -176,24 +176,25 @@ auto TemplateInput::resolveAttribute(std::u16string_view name) -> const model::A
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveAttribute() called before configuration has been loaded");
 	}
 
-	/// @todo add any attributes this class supports directly, including attributes inherited from the I/O component
-
 	// Check the handler attributes
 	if (auto attribute = _handler->resolveAttribute(name))
 	{
 		return attribute;
 	}
 
+	/// @todo add any additional attributes this class supports, including attributes inherited from the I/O component
+
 	return nullptr;
 }
 
 auto TemplateInput::resolveTask(std::u16string_view name) -> std::shared_ptr<process::Task>
 {
-	/// @todo add any additional tasks this class supports
 	if (name == u"read"sv)
 	{
 		return std::shared_ptr<process::Task>(sharedFromThis(), &_readTask);
 	}
+
+	/// @todo add any additional tasks this class supports
 
 	return nullptr;
 }
@@ -207,13 +208,13 @@ auto TemplateInput::resolveEvent(std::u16string_view name) -> std::shared_ptr<pr
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveEvent() called before configuration has been loaded");
 	}
 
-	/// @todo add any events this class supports directly
-
 	// Check the handler events
 	if (auto event = _handler->resolveEvent(name, sharedFromThis()))
 	{
 		return event;
 	}
+
+	/// @todo add any additional events this class supports, including events inherited from the I/O component
 
 	return nullptr;
 }
@@ -228,15 +229,13 @@ auto TemplateInput::readHandle(const model::Attribute &attribute) const noexcept
 		return std::make_error_code(std::errc::invalid_argument);
 	}
 
-	/// @todo add any attributes this class supports directly
-	
 	// Check the handler attributes
 	if (auto handle = _handler->readHandle(attribute))
 	{
 		return *handle;
 	}
 
-	/// @todo add any attributes inherited from the I/O component
+	/// @todo add any additional readable attributes this class supports, including attributes inherited from the I/O component
 
 	return data::ReadHandle::Error::Unknown;
 }

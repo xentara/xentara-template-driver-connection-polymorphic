@@ -254,7 +254,7 @@ auto TemplateOutputHandler<ValueType>::readHandle(const model::Attribute &attrib
 template <typename ValueType>
 auto TemplateOutputHandler<ValueType>::writeHandle(const model::Attribute &attribute, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle>
 {
-	// There is only one writable attribute
+	// Handle the value attribute, which is the only writable attribute
 	if (attribute == kValueAttribute)
 	{
 		// Make a shared pointer that refers to this handler
