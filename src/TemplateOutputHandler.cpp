@@ -260,8 +260,9 @@ auto TemplateOutputHandler<ValueType>::writeHandle(const model::Attribute &attri
 		// Make a shared pointer that refers to this handler
 		std::shared_ptr<TemplateOutputHandler<ValueType>> sharedThis(parent, this);
 
-		/// @todo use the correct value type
-		return data::WriteHandle(std::in_place_type<ValueType>, &TemplateOutputHandler<ValueType>::scheduleOutputValue, sharedThis);
+		// This magic code creates a write handle of type ValueType that calls scheduleWrite() on sharedThis.
+		// (There are two sets of braces needed here: one for data::WriteHandle, and one for std::optional)
+		return {{ std::in_place_type<ValueType>, &TemplateOutputHandler<ValueType>::scheduleOutputValue, sharedThis }};
 	}
 
 	return std::nullopt;
