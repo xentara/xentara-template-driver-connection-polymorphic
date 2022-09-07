@@ -103,17 +103,9 @@ auto ReadState<DataType>::update(std::chrono::system_clock::time_point timeStamp
 		// Reset the value to a default constructed value
 		state._value = {};
 
-		// Get the error code
-		auto error = valueOrError.error();
-		// We cannot reset the error to Ok if we don't have a value. So we use the special custom error code instead.
-		if (!error)
-		{
-			error = CustomError::NoData;
-		}
-
 		// Set the error
 		state._quality = data::Quality::Bad;
-		state._error = attributes::errorCode(error);
+		state._error = attributes::errorCode(valueOrError.error());
 	}
 
 	// Detect changes

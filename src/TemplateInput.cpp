@@ -262,8 +262,11 @@ auto TemplateInput::ioComponentStateChanged(std::chrono::system_clock::time_poin
 		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::ioComponentStateChanged() called before configuration has been loaded");
 	}
 
+	// We cannot reset the error to Ok because we don't have a value. So we use the special custom error code instead.
+	auto effectiveError = error ? error : CustomError::NoData;
+
 	// Ask the handler to update its state. We do not notify the I/O component, because that is who this message comes from in the first place.
-	_handler->updateState(timeStamp, error);
+	_handler->updateState(timeStamp, effectiveError);
 }
 
 auto TemplateInput::handleReadError(std::chrono::system_clock::time_point timeStamp, std::error_code error)
