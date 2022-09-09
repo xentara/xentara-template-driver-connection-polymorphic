@@ -22,7 +22,7 @@ template <typename ValueType>
 class TemplateInputHandler final : public AbstractTemplateInputHandler
 {
 public:
-	/// @name Virtual Overrides for AbstractTemplateOutputHandler
+	/// @name Virtual Overrides for AbstractTemplateInputHandler
 	/// @{
 
 	auto dataType() const -> const data::DataType & final;
