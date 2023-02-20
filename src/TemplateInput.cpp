@@ -27,13 +27,13 @@ auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
 	// Go through all the members of the JSON object that represents this object
 	for (auto && [name, value] : jsonObject)
     {
-		if (name == u8"dataType"sv)
+		if (name == "dataType"sv)
 		{
 			// Create the handler
 			_handler = createHandler(value);
 		}
 		/// @todo load custom configuration parameters
-		else if (name == u8"TODO"sv)
+		else if (name == "TODO"sv)
 		{
 			/// @todo parse the value correctly
 			auto todo = value.asNumber<std::uint64_t>();
@@ -72,50 +72,50 @@ auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
 auto TemplateInput::createHandler(utils::json::decoder::Value &value) -> std::unique_ptr<AbstractTemplateInputHandler>
 {
 	// Get the keyword from the value
-	auto keyword = value.asString<std::u8string>();
+	auto keyword = value.asString<std::string>();
 	
 	/// @todo use keywords that are appropriate to the I/O component
-	if (keyword == u8"bool"sv)
+	if (keyword == "bool"sv)
 	{
 		return std::make_unique<TemplateInputHandler<bool>>();
 	}
-	else if (keyword == u8"uint8"sv)
+	else if (keyword == "uint8"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::uint8_t>>();
 	}
-	else if (keyword == u8"uint16"sv)
+	else if (keyword == "uint16"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::uint16_t>>();
 	}
-	else if (keyword == u8"uint32"sv)
+	else if (keyword == "uint32"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::uint32_t>>();
 	}
-	else if (keyword == u8"uint64"sv)
+	else if (keyword == "uint64"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::uint64_t>>();
 	}
-	else if (keyword == u8"int8"sv)
+	else if (keyword == "int8"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::int8_t>>();
 	}
-	else if (keyword == u8"int16"sv)
+	else if (keyword == "int16"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::int16_t>>();
 	}
-	else if (keyword == u8"int32"sv)
+	else if (keyword == "int32"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::int32_t>>();
 	}
-	else if (keyword == u8"int64"sv)
+	else if (keyword == "int64"sv)
 	{
 		return std::make_unique<TemplateInputHandler<std::int64_t>>();
 	}
-	else if (keyword == u8"float32"sv)
+	else if (keyword == "float32"sv)
 	{
 		return std::make_unique<TemplateInputHandler<float>>();
 	}
-	else if (keyword == u8"float64"sv)
+	else if (keyword == "float64"sv)
 	{
 		return std::make_unique<TemplateInputHandler<double>>();
 	}
@@ -167,7 +167,7 @@ auto TemplateInput::directions() const -> io::Directions
 	return io::Direction::Input;
 }
 
-auto TemplateInput::resolveAttribute(std::u16string_view name) -> const model::Attribute *
+auto TemplateInput::resolveAttribute(std::string_view name) -> const model::Attribute *
 {
 	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
@@ -187,9 +187,9 @@ auto TemplateInput::resolveAttribute(std::u16string_view name) -> const model::A
 	return nullptr;
 }
 
-auto TemplateInput::resolveTask(std::u16string_view name) -> std::shared_ptr<process::Task>
+auto TemplateInput::resolveTask(std::string_view name) -> std::shared_ptr<process::Task>
 {
-	if (name == u"read"sv)
+	if (name == "read"sv)
 	{
 		return std::shared_ptr<process::Task>(sharedFromThis(), &_readTask);
 	}
@@ -199,7 +199,7 @@ auto TemplateInput::resolveTask(std::u16string_view name) -> std::shared_ptr<pro
 	return nullptr;
 }
 
-auto TemplateInput::resolveEvent(std::u16string_view name) -> std::shared_ptr<process::Event>
+auto TemplateInput::resolveEvent(std::string_view name) -> std::shared_ptr<process::Event>
 {
 	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.

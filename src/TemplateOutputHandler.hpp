@@ -29,9 +29,9 @@ public:
 
 	auto dataType() const -> const data::DataType & final;
 
-	auto resolveAttribute(std::u16string_view name) -> const model::Attribute * final;
+	auto resolveAttribute(std::string_view name) -> const model::Attribute * final;
 
-	auto resolveEvent(std::u16string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> final;
+	auto resolveEvent(std::string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> final;
 
 	auto readHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle> final;
 
