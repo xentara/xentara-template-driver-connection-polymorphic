@@ -79,7 +79,7 @@ auto ReadState<DataType>::realize() -> void
 }
 
 template <std::regular DataType>
-auto ReadState<DataType>::update(std::chrono::system_clock::time_point timeStamp, const utils::eh::Failable<DataType> &valueOrError) -> void
+auto ReadState<DataType>::update(std::chrono::system_clock::time_point timeStamp, const utils::eh::expected<DataType, std::error_code> &valueOrError) -> void
 {
 	// Make a write sentinel
 	memory::WriteSentinel sentinel { _dataBlock };
@@ -89,10 +89,10 @@ auto ReadState<DataType>::update(std::chrono::system_clock::time_point timeStamp
 	state._updateTime = timeStamp;
 
 	// See if we have a value
-	if (const auto value = valueOrError.value())
+	if (valueOrError)
 	{
 		// Set the value
-		state._value = *value;
+		state._value = *valueOrError;
 
 		// Reset the error
 		state._quality = data::Quality::Good;

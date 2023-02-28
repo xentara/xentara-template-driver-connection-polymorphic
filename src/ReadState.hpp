@@ -7,7 +7,7 @@
 #include <xentara/data/ReadHandle.hpp>
 #include <xentara/memory/ObjectBlock.hpp>
 #include <xentara/process/Event.hpp>
-#include <xentara/utils/eh/Failable.hpp>
+#include <xentara/utils/eh/expected.hpp>
 
 #include <chrono>
 #include <concepts>
@@ -58,7 +58,7 @@ public:
 	/// @param timeStamp The update time stamp
 	/// @param valueOrError This is a variant-like type that will hold either the new value, or an std::error_code object
 	/// containing an read error
-	auto update(std::chrono::system_clock::time_point timeStamp, const utils::eh::Failable<DataType> &valueOrError) -> void;
+	auto update(std::chrono::system_clock::time_point timeStamp, const utils::eh::expected<DataType, std::error_code> &valueOrError) -> void;
 
 private:
 	/// @brief This structure is used to represent the state inside the memory block

@@ -39,7 +39,7 @@ template <typename ValueType>
 auto TemplateOutputHandler<ValueType>::updateReadState(std::chrono::system_clock::time_point timeStamp, std::error_code error)
 	-> void
 {
-	_readState.update(timeStamp, error);
+	_readState.update(timeStamp, utils::eh::unexpected(error));
 }
 
 template <typename ValueType>
@@ -82,7 +82,7 @@ auto TemplateOutputHandler<ValueType>::handleReadError(std::chrono::system_clock
 	-> void
 {
 	// Update our own state
-	_readState.update(timeStamp, error);
+	_readState.update(timeStamp, utils::eh::unexpected(error));
 	// Notify the error sink
 	errorSink.handleReadError(timeStamp, error);
 }

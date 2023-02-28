@@ -38,7 +38,7 @@ template <typename ValueType>
 auto TemplateInputHandler<ValueType>::updateState(std::chrono::system_clock::time_point timeStamp, std::error_code error)
 	-> void
 {
-	_state.update(timeStamp, error);
+	_state.update(timeStamp, utils::eh::unexpected(error));
 }
 
 template <typename ValueType>
@@ -81,7 +81,7 @@ auto TemplateInputHandler<ValueType>::handleReadError(std::chrono::system_clock:
 	-> void
 {
 	// Update our own state
-	_state.update(timeStamp, error);
+	_state.update(timeStamp, utils::eh::unexpected(error));
 	// Notify the error sink
 	errorSink.handleReadError(timeStamp, error);
 }
