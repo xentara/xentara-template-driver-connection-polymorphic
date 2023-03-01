@@ -96,7 +96,7 @@ auto ReadState<DataType>::update(std::chrono::system_clock::time_point timeStamp
 
 		// Reset the error
 		state._quality = data::Quality::Good;
-		state._error = 0;
+		state._error = {};
 	}
 	// We don't have a value, but an error
 	else
@@ -106,7 +106,7 @@ auto ReadState<DataType>::update(std::chrono::system_clock::time_point timeStamp
 
 		// Set the error
 		state._quality = data::Quality::Bad;
-		state._error = attributes::errorCode(valueOrError.error());
+		state._error = valueOrError.error();
 	}
 
 	// Detect changes

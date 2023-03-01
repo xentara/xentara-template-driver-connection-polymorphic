@@ -66,7 +66,7 @@ auto WriteState::update(std::chrono::system_clock::time_point timeStamp, std::er
 
 	// Update the state
 	state._writeTime = timeStamp;
-	state._writeError = attributes::errorCode(error);
+	state._writeError = error;
 	// Commit the data before sending the event
 	sentinel.commit();
 
