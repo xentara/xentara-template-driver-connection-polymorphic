@@ -7,9 +7,9 @@
 namespace xentara::plugins::templateDriver::tasks
 {
 
-/// @brief A Xentara tasks used to read a data point
+/// @brief A Xentara task used to read a data point
 extern const process::Task::Role kRead;
-/// @brief A Xentara tasks used to write a data point
+/// @brief A Xentara task used to write a data point
 extern const process::Task::Role kWrite;
 
 } // namespace xentara::plugins::templateDriver::tasks
