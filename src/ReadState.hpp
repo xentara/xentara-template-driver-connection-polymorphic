@@ -2,17 +2,21 @@
 #pragma once
 
 #include "Attributes.hpp"
+#include "CustomError.hpp"
 
 #include <xentara/data/Quality.hpp>
 #include <xentara/data/ReadHandle.hpp>
 #include <xentara/memory/ObjectBlock.hpp>
+#include <xentara/model/ForEachAttributeFunction.hpp>
+#include <xentara/model/ForEachEventFunction.hpp>
 #include <xentara/process/Event.hpp>
 #include <xentara/utils/eh/expected.hpp>
 
 #include <chrono>
 #include <concepts>
-#include <optional>
 #include <memory>
+#include <optional>
+#include <string>
 
 namespace xentara::plugins::templateDriver
 {
@@ -22,30 +26,28 @@ template <std::regular DataType>
 class ReadState final
 {
 public:
-	/// @brief Resolves an attribute that belong to this state.
-	/// @note The value attribute is not resolved, as it may be writable as well, and thus shared with another object that takes
-	/// care of the write direction.
-	/// @param name The name of the attribute to resolve
-	/// @return The attribute, or nullptr if we don't have an attribute with this name
-	auto resolveAttribute(std::string_view name) -> const model::Attribute *;
+	/// @brief Iterates over all the attributes that belong to this state.
+	/// @param function The function that should be called for each attribute
+	/// @return The return value of the last function call
+	auto forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool;
 
-	/// @brief Resolves an event.
-	/// @param name The name of the event to resolve
+	/// @brief Iterates over all the events that belong to this state.
+	/// @param function The function that should be called for each events
 	/// @param parent
 	/// @parblock
 	/// A shared pointer to the containing object.
 	/// 
-	/// The pointer is used in the aliasing constructor of std::shared_ptr when constructing the
-	/// return value, so that the returned pointer will share ownership information with pointers to the parent object.
+	/// The pointer is used in the aliasing constructor of std::shared_ptr when constructing the event pointers,
+	/// so that they will share ownership information with pointers to the parent object.
 	/// @endparblock
-	/// @return The event, or nullptr if we don't have an event with this name
-	auto resolveEvent(std::string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event>;
+	/// @return The return value of the last function call
+	auto forEachEvent(const model::ForEachEventFunction &function, std::shared_ptr<void> parent) -> bool;
 
 	/// @brief Creates a read-handle for an attribute that belong to this state.
 	/// @note The value attribute is not handled, it must be gotten separately using valueReadHandle().
 	/// @param attribute The attribute to create the handle for
 	/// @return A read handle for the attribute, or std::nullopt if the attribute is unknown (including the value attribute)
-	auto readHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>;
+	auto makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>;
 
 	/// @brief Creates a read-handle for the value attribute
 	/// @return A read handle to the value attribute
@@ -101,5 +103,6 @@ extern template class ReadState<std::int32_t>;
 extern template class ReadState<std::int64_t>;
 extern template class ReadState<float>;
 extern template class ReadState<double>;
+extern template class ReadState<std::string>;
 
 } // namespace xentara::plugins::templateDriver

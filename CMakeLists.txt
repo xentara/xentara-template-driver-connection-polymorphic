@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.25)
 
 # TODO: rename project and add description, URL etc.
 project(xentara-template-driver	LANGUAGES CXX)
@@ -26,14 +26,18 @@ add_library(
 	"src/Attributes.hpp"
 	"src/CustomError.cpp"
 	"src/CustomError.hpp"
-	"src/Driver.cpp"
-	"src/Driver.hpp"
+	"src/Events.cpp"
+	"src/Events.hpp"
 	"src/Plugin.cpp"
 	"src/Plugin.hpp"
 	"src/ReadState.cpp"
 	"src/ReadState.hpp"
 	"src/ReadTask.hpp"
 	"src/SingleValueQueue.hpp"
+	"src/Skill.cpp"
+	"src/Skill.hpp"
+	"src/Tasks.cpp"
+	"src/Tasks.hpp"
 	"src/TemplateInput.cpp"
 	"src/TemplateInput.hpp"
 	"src/TemplateInputHandler.cpp"

@@ -56,8 +56,8 @@ auto TemplateInputHandler<ValueType>::doRead(std::chrono::system_clock::time_poi
 	/// @todo it may be advantageous to split this function up according to value type, either using explicit 
 	/// template specialization, or using if constexpr().
 	//
-	// For example, this function could be split into doReadBoolean(), doReadInteger(), and doReadFloatingPoint() functions.
-	// These functions could then be called like this:
+	// For example, this function could be split into doReadBoolean(), doReadInteger(), doReadFloatingPoint(),
+	// and doReadString() functions. These functions could then be called like this:
 	// 
 	// if constexpr (std::same_as<ValueType, bool>)
 	// {
@@ -70,6 +70,10 @@ auto TemplateInputHandler<ValueType>::doRead(std::chrono::system_clock::time_poi
 	// else if constexpr (std::floating_point<ValueType>)
 	// {
 	//     doReadFloatingPoint(timeStamp);
+	// }
+	// else if constexpr (utils::tools::StringType<ValueType>)
+	// {
+	//     doReadString(timeStamp);
 	// }
 	// 
 	// To determine if a type is an integer type, you should use xentara::utils::Tools::Integral instead of std::integral,
@@ -104,6 +108,10 @@ constexpr auto TemplateInputHandler<ValueType>::staticDataType() -> const data::
 	{
 	    return data::DataType::kFloatingPoint;
 	}
+	else if constexpr (utils::tools::StringType<ValueType>)
+	{
+	    return data::DataType::kString;
+	}
 }
 
 template <typename ValueType>
@@ -113,37 +121,26 @@ auto TemplateInputHandler<ValueType>::dataType() const -> const data::DataType &
 }
 
 template <typename ValueType>
-auto TemplateInputHandler<ValueType>::resolveAttribute(std::string_view name) -> const model::Attribute *
+auto TemplateInputHandler<ValueType>::forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool
 {
-	// Handle the value attribute separately
-	if (name == kValueAttribute)
-	{
-		return &kValueAttribute;
-	}
+	return
+		// Handle the value attribute separately
+		function(kValueAttribute) ||
 
-	// Check the state attributes
-	if (auto attribute = _state.resolveAttribute(name))
-	{
-		return attribute;
-	}
-
-	return nullptr;
+		// Handle the state attributes
+		_state.forEachAttribute(function);
 }
 
 template <typename ValueType>
-auto TemplateInputHandler<ValueType>::resolveEvent(std::string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event>
+auto TemplateInputHandler<ValueType>::forEachEvent(const model::ForEachEventFunction &function, std::shared_ptr<void> parent) -> bool
 {
-	// Check the state events
-	if (auto event = _state.resolveEvent(name, parent))
-	{
-		return event;
-	}
-
-	return nullptr;
+	return
+		// Handle the state events
+		_state.forEachEvent(function, parent);
 }
 
 template <typename ValueType>
-auto TemplateInputHandler<ValueType>::readHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
+auto TemplateInputHandler<ValueType>::makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
 {
 	// Handle the value attribute separately
 	if (attribute == kValueAttribute)
@@ -151,10 +148,10 @@ auto TemplateInputHandler<ValueType>::readHandle(const model::Attribute &attribu
 		return _state.valueReadHandle();
 	}
 	
-	// Check the state attributes
-	if (auto handle = _state.readHandle(attribute))
+	// Handle the state attributes
+	if (auto handle = _state.makeReadHandle(attribute))
 	{
-		return *handle;
+		return handle;
 	}
 
 	return std::nullopt;
@@ -180,5 +177,6 @@ template class TemplateInputHandler<std::int32_t>;
 template class TemplateInputHandler<std::int64_t>;
 template class TemplateInputHandler<float>;
 template class TemplateInputHandler<double>;
+template class TemplateInputHandler<std::string>;
 
 } // namespace xentara::plugins::templateDriver

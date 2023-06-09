@@ -57,8 +57,8 @@ auto TemplateOutputHandler<ValueType>::doRead(std::chrono::system_clock::time_po
 	/// @todo it may be advantageous to split this function up according to value type, either using explicit 
 	/// template specialization, or using if constexpr().
 	//
-	// For example, this function could be split into doRealBoolean(), doRealInteger(), and doRealFloatingPoint() functions.
-	// These functions could then be called like this:
+	// For example, this function could be split into doReadBoolean(), doReadInteger(), doReadFloatingPoint(),
+	// and doReadString() functions. These functions could then be called like this:
 	//
 	// if constexpr (std::same_as<ValueType, bool>)
 	// {
@@ -66,11 +66,15 @@ auto TemplateOutputHandler<ValueType>::doRead(std::chrono::system_clock::time_po
 	// }
 	// else if constexpr (utils::Tools::Integral<ValueType>)
 	// {
-	//     doRealInteger(timeStamp);
+	//     doReadInteger(timeStamp);
 	// }
 	// else if constexpr (std::floating_point<ValueType>)
 	// {
-	//     doRealFloatingPoint(timeStamp);
+	//     doReadFloatingPoint(timeStamp);
+	// }
+	// else if constexpr (utils::tools::StringType<ValueType>)
+	// {
+	//     doReadString(timeStamp);
 	// }
 	//
 	// To determine if a type is an integer type, you should use xentara::utils::Tools::Integral instead of std::integral,
@@ -104,6 +108,10 @@ constexpr auto TemplateOutputHandler<ValueType>::staticDataType() -> const data:
 	else if constexpr (std::floating_point<ValueType>)
 	{
 	    return data::DataType::kFloatingPoint;
+	}
+	else if constexpr (utils::tools::StringType<ValueType>)
+	{
+	    return data::DataType::kString;
 	}
 }
 
@@ -152,8 +160,8 @@ auto TemplateOutputHandler<ValueType>::doWrite(ValueType value, std::chrono::sys
 	/// @todo it may be advantageous to split this function up according to value type, either using explicit 
 	/// template specialization, or using if constexpr().
 	//
-	// For example, this function could be split into doWriteBoolean(), doWriteInteger(), and doWriteFloatingPoint() functions.
-	// These functions could then be called like this:
+	// For example, this function could be split into doWriteBoolean(), doWriteInteger(), doWriteFloatingPoint(),
+	// and doWriteString() functions. These functions could then be called like this:
 	//
 	// if constexpr (std::same_as<ValueType, bool>)
 	// {
@@ -166,6 +174,10 @@ auto TemplateOutputHandler<ValueType>::doWrite(ValueType value, std::chrono::sys
 	// else if constexpr (std::floating_point<ValueType>)
 	// {
 	//     doWriteFloatingPoint(value, timeStamp);
+	// }
+	// else if constexpr (utils::tools::StringType<ValueType>)
+	// {
+	//     doWriteString(value, timeStamp);
 	// }
 	//
 	// To determine if a type is an integer type, you should use xentara::utils::Tools::Integral instead of std::integral,
@@ -189,47 +201,30 @@ auto TemplateOutputHandler<ValueType>::dataType() const -> const data::DataType 
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::resolveAttribute(std::string_view name) -> const model::Attribute *
+auto TemplateOutputHandler<ValueType>::forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool
 {
-	// Handle the value attribute separately
-	if (name == kValueAttribute)
-	{
-		return &kValueAttribute;
-	}
+	return
+		// Handle the value attribute separately
+		function(kValueAttribute) ||
 
-	// Check the read state attributes
-	if (auto attribute = _readState.resolveAttribute(name))
-	{
-		return attribute;
-	}
-	// Check the write state attributes
-	if (auto attribute = _writeState.resolveAttribute(name))
-	{
-		return attribute;
-	}
-
-	return nullptr;
+		// Handle the read state attributes
+		_readState.forEachAttribute(function) ||
+		// Handle the write state attributes
+		_writeState.forEachAttribute(function);
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::resolveEvent(std::string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event>
+auto TemplateOutputHandler<ValueType>::forEachEvent(const model::ForEachEventFunction &function, std::shared_ptr<void> parent) -> bool
 {
-	// Check the read state events
-	if (auto event = _readState.resolveEvent(name, parent))
-	{
-		return event;
-	}
-	// Check the write state events
-	if (auto event = _writeState.resolveEvent(name, parent))
-	{
-		return event;
-	}
-
-	return nullptr;
+	return
+		// Handle the read state events
+		_readState.forEachEvent(function, parent) ||
+		// Handle the write state events
+		_writeState.forEachEvent(function, parent);
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::readHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
+auto TemplateOutputHandler<ValueType>::makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
 {
 	// Handle the value attribute separately
 	if (attribute == kValueAttribute)
@@ -237,22 +232,22 @@ auto TemplateOutputHandler<ValueType>::readHandle(const model::Attribute &attrib
 		return _readState.valueReadHandle();
 	}
 	
-	// Check the read state attributes
-	if (auto handle = _readState.readHandle(attribute))
+	// Handle the read state attributes
+	if (auto handle = _readState.makeReadHandle(attribute))
 	{
-		return *handle;
+		return handle;
 	}
-	// Check the write state attributes
-	if (auto handle = _writeState.readHandle(attribute))
+	// Handle the write state attributes
+	if (auto handle = _writeState.makeReadHandle(attribute))
 	{
-		return *handle;
+		return handle;
 	}
 
 	return std::nullopt;
 }
 
 template <typename ValueType>
-auto TemplateOutputHandler<ValueType>::writeHandle(const model::Attribute &attribute, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle>
+auto TemplateOutputHandler<ValueType>::makeWriteHandle(const model::Attribute &attribute, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle>
 {
 	// Handle the value attribute, which is the only writable attribute
 	if (attribute == kValueAttribute)
@@ -289,5 +284,6 @@ template class TemplateOutputHandler<std::int32_t>;
 template class TemplateOutputHandler<std::int64_t>;
 template class TemplateOutputHandler<float>;
 template class TemplateOutputHandler<double>;
+template class TemplateOutputHandler<std::string>;
 
 } // namespace xentara::plugins::templateDriver

@@ -16,9 +16,9 @@ const model::Attribute kError { model::Attribute::kError, model::Attribute::Acce
 const model::Attribute kWriteError { model::Attribute::kWriteError, model::Attribute::Access::ReadOnly, data::DataType::kErrorCode };
 
 /// @todo assign a unique UUID
-const model::Attribute kConnectionTime { "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"_uuid, "connectionTime"sv, model::Attribute::Access::ReadOnly, data::DataType::kTimeStamp };
+const model::Attribute kConnectionTime { "deadbeef-dead-beef-dead-beefdeadbeef"_uuid, "connectionTime"sv, model::Attribute::Access::ReadOnly, data::DataType::kTimeStamp };
 
 /// @todo assign a unique UUID
-const model::Attribute kDeviceError { "ffffffff-ffff-ffff-ffff-ffffffffffff"_uuid, "error"sv, model::Attribute::Access::ReadOnly, data::DataType::kErrorCode };
+const model::Attribute kDeviceError { "deadbeef-dead-beef-dead-beefdeadbeef"_uuid, "error"sv, model::Attribute::Access::ReadOnly, data::DataType::kErrorCode };
 
 } // namespace xentara::plugins::templateDriver::attributes

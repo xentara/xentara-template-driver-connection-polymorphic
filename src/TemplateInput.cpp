@@ -2,9 +2,15 @@
 #include "TemplateInput.hpp"
 
 #include "AbstractTemplateInputHandler.hpp"
+#include "Tasks.hpp"
 #include "TemplateInputHandler.hpp"
 
+#include <xentara/config/FallbackHandler.hpp>
 #include <xentara/data/ReadHandle.hpp>
+#include <xentara/model/Attribute.hpp>
+#include <xentara/model/ForEachAttributeFunction.hpp>
+#include <xentara/model/ForEachEventFunction.hpp>
+#include <xentara/model/ForEachTaskFunction.hpp>
 #include <xentara/process/ExecutionContext.hpp>
 #include <xentara/utils/json/decoder/Object.hpp>
 #include <xentara/utils/json/decoder/Errors.hpp>
@@ -19,7 +25,7 @@ TemplateInput::Class TemplateInput::Class::_instance;
 auto TemplateInput::loadConfig(const ConfigIntializer &initializer,
 		utils::json::decoder::Object &jsonObject,
 		config::Resolver &resolver,
-		const FallbackConfigHandler &fallbackHandler) -> void
+		const config::FallbackHandler &fallbackHandler) -> void
 {
 	// Get a reference that allows us to modify our own config attributes
     auto &&configAttributes = initializer[Class::instance().configHandle()];
@@ -119,6 +125,10 @@ auto TemplateInput::createHandler(utils::json::decoder::Value &value) -> std::un
 	{
 		return std::make_unique<TemplateInputHandler<double>>();
 	}
+	else if (keyword == "string"sv)
+	{
+		return std::make_unique<TemplateInputHandler<std::string>>();
+	}
 
 	// The keyword is not known
 	else
@@ -167,61 +177,50 @@ auto TemplateInput::directions() const -> io::Directions
 	return io::Direction::Input;
 }
 
-auto TemplateInput::resolveAttribute(std::string_view name) -> const model::Attribute *
+auto TemplateInput::forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool
 {
-	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
+	// forEachAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveAttribute() called before configuration has been loaded");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::forEachAttribute() called before configuration has been loaded");
 	}
 
-	// Check the handler attributes
-	if (auto attribute = _handler->resolveAttribute(name))
-	{
-		return attribute;
-	}
+	return
+		// Handle the handler attributes
+		_handler->forEachAttribute(function);
 
-	/// @todo add any additional attributes this class supports, including attributes inherited from the I/O component
-
-	return nullptr;
+	/// @todo handle any additional attributes this class supports, including attributes inherited from the I/O component
 }
 
-auto TemplateInput::resolveTask(std::string_view name) -> std::shared_ptr<process::Task>
+auto TemplateInput::forEachEvent(const model::ForEachEventFunction &function) -> bool
 {
-	if (name == "read"sv)
-	{
-		return std::shared_ptr<process::Task>(sharedFromThis(), &_readTask);
-	}
-
-	/// @todo add any additional tasks this class supports
-
-	return nullptr;
-}
-
-auto TemplateInput::resolveEvent(std::string_view name) -> std::shared_ptr<process::Event>
-{
-	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
+	// forEachAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::resolveEvent() called before configuration has been loaded");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateInput::forEachEvent() called before configuration has been loaded");
 	}
 
-	// Check the handler events
-	if (auto event = _handler->resolveEvent(name, sharedFromThis()))
-	{
-		return event;
-	}
+	return
+		// Handle the handler events
+		_handler->forEachEvent(function, sharedFromThis());
 
-	/// @todo add any additional events this class supports, including events inherited from the I/O component
-
-	return nullptr;
+	/// @todo handle any additional events this class supports, including events inherited from the I/O component
 }
 
-auto TemplateInput::readHandle(const model::Attribute &attribute) const noexcept -> data::ReadHandle
+auto TemplateInput::forEachTask(const model::ForEachTaskFunction &function) -> bool
 {
-	// readHandle() must not be called before the configuration was loaded, so the handler should have been
+	// Handle all the tasks we support
+	return
+		function(tasks::kRead, sharedFromThis(&_readTask));
+
+	/// @todo handle any additional tasks this class supports
+}
+
+auto TemplateInput::makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
+{
+	// makeReadHandle() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
@@ -229,15 +228,15 @@ auto TemplateInput::readHandle(const model::Attribute &attribute) const noexcept
 		return std::make_error_code(std::errc::invalid_argument);
 	}
 
-	// Check the handler attributes
-	if (auto handle = _handler->readHandle(attribute))
+	// Handle the handler attributes
+	if (auto handle = _handler->makeReadHandle(attribute))
 	{
-		return *handle;
+		return handle;
 	}
 
-	/// @todo add any additional readable attributes this class supports, including attributes inherited from the I/O component
+	/// @todo handle any additional readable attributes this class supports, including attributes inherited from the I/O component
 
-	return data::ReadHandle::Error::Unknown;
+	return std::nullopt;
 }
 
 auto TemplateInput::realize() -> void

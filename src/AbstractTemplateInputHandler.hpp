@@ -4,6 +4,8 @@
 #include <xentara/data/DataType.hpp>
 #include <xentara/data/ReadHandle.hpp>
 #include <xentara/model/Attribute.hpp>
+#include <xentara/model/ForEachAttributeFunction.hpp>
+#include <xentara/model/ForEachEventFunction.hpp>
 #include <xentara/process/Event.hpp>
 
 #include <string_view>
@@ -27,7 +29,7 @@ public:
 	public:
 		/// @brief Virtual destructor
 		/// @note The destructor is pure virtual (= 0) to ensure that this class will remain abstract, even if we should remove all
-		/// other pure virtual functions later. This is not necessary, of course, but prefents the abstract class from becoming
+		/// other pure virtual functions later. This is not necessary, of course, but prevents the abstract class from becoming
 		/// instantiable by accident as a result of refactoring.
 		virtual ~ErrorSink() = 0;
 
@@ -37,34 +39,34 @@ public:
 
 	/// @brief Virtual destructor
 	/// @note The destructor is pure virtual (= 0) to ensure that this class will remain abstract, even if we should remove all
-	/// other pure virtual functions later. This is not necessary, of course, but prefents the abstract class from becoming
+	/// other pure virtual functions later. This is not necessary, of course, but prevents the abstract class from becoming
 	/// instantiable by accident as a result of refactoring.
 	virtual ~AbstractTemplateInputHandler() = 0;
 
 	/// @brief Returns the data type
 	virtual auto dataType() const -> const data::DataType & = 0;
 
-	/// @brief Resolves an attribute that belong to this state.
-	/// @param name The name of the attribute to resolve
-	/// @return The attribute, or nullptr if we don't have an attribute with this name
-	virtual auto resolveAttribute(std::string_view name) -> const model::Attribute * = 0;
+	/// @brief Iterates over all the attributes.
+	/// @param function The function that should be called for each attribute
+	/// @return The return value of the last function call
+	virtual auto forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool = 0;
 
-	/// @brief Resolves an event.
-	/// @param name The name of the event to resolve
+	/// @brief Iterates over all the events.
+	/// @param function The function that should be called for each events
 	/// @param parent
 	/// @parblock
 	/// A shared pointer to the containing object.
 	/// 
-	/// The pointer is used in the aliasing constructor of std::shared_ptr when constructing the
-	/// return value, so that the returned pointer will share ownership information with pointers to the parent object.
+	/// The pointer is used in the aliasing constructor of std::shared_ptr when constructing the event pointers,
+	/// so that they will share ownership information with pointers to the parent object.
 	/// @endparblock
-	/// @return The event, or nullptr if we don't have an event with this name
-	virtual auto resolveEvent(std::string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> = 0;
+	/// @return The return value of the last function call
+	virtual auto forEachEvent(const model::ForEachEventFunction &function, std::shared_ptr<void> parent) -> bool = 0;
 
-	/// @brief Creates a read-handle for an attribute that belong to this state.
+	/// @brief Creates a read-handle for an attribute.
 	/// @param attribute The attribute to create the handle for
 	/// @return A read handle for the attribute, or std::nullopt if the attribute is unknown
-	virtual auto readHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle> = 0;
+	virtual auto makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle> = 0;
 
 	/// @brief Realizes the handler
 	virtual auto realize() -> void = 0;

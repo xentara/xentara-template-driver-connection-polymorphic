@@ -8,6 +8,8 @@
 
 #include <xentara/model/Attribute.hpp>
 
+#include <string>
+
 namespace xentara::plugins::templateDriver
 {
 
@@ -29,13 +31,13 @@ public:
 
 	auto dataType() const -> const data::DataType & final;
 
-	auto resolveAttribute(std::string_view name) -> const model::Attribute * final;
+	auto forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool final;
 
-	auto resolveEvent(std::string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event> final;
+	auto forEachEvent(const model::ForEachEventFunction &function, std::shared_ptr<void> parent) -> bool final;
 
-	auto readHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle> final;
+	auto makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle> final;
 
-	auto writeHandle(const model::Attribute &attribute, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle> final;
+	auto makeWriteHandle(const model::Attribute &attribute, std::shared_ptr<void> parent) noexcept -> std::optional<data::WriteHandle> final;
 
 	auto realize() -> void final;
 		
@@ -100,5 +102,6 @@ extern template class TemplateOutputHandler<std::int32_t>;
 extern template class TemplateOutputHandler<std::int64_t>;
 extern template class TemplateOutputHandler<float>;
 extern template class TemplateOutputHandler<double>;
+extern template class TemplateOutputHandler<std::string>;
 
 } // namespace xentara::plugins::templateDriver

@@ -10,41 +10,30 @@ namespace xentara::plugins::templateDriver
 {
 
 template <std::regular DataType>
-auto ReadState<DataType>::resolveAttribute(std::string_view name) -> const model::Attribute *
+auto ReadState<DataType>::forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool
 {
-	// Check all the attributes we support
-	return model::Attribute::resolve(name,
-		model::Attribute::kUpdateTime,
-		model::Attribute::kChangeTime,
-		model::Attribute::kQuality,
-		attributes::kError);
+	// Handle all the attributes we support
+	return
+		function(model::Attribute::kUpdateTime) ||
+		function(model::Attribute::kChangeTime) ||
+		function(model::Attribute::kQuality) ||
+		function(attributes::kError);
 }
 
 template <std::regular DataType>
-auto ReadState<DataType>::resolveEvent(std::string_view name, std::shared_ptr<void> parent) -> std::shared_ptr<process::Event>
+auto ReadState<DataType>::forEachEvent(const model::ForEachEventFunction &function, std::shared_ptr<void> parent) -> bool
 {
-	// Check all the events we support
-	if (name == model::Attribute::kValue)
-	{
-		return std::shared_ptr<process::Event>(parent, &_valueChangedEvent);
-	}
-	else if (name == model::Attribute::kQuality)
-	{
-		return std::shared_ptr<process::Event>(parent, &_qualityChangedEvent);
-	}
-	else if (name == process::Event::kChanged)
-	{
-		return std::shared_ptr<process::Event>(parent, &_changedEvent);
-	}
-
-	// The event name is not known
-	return nullptr;
+	// Handle all the events we support
+	return
+		function(model::Attribute::kValue, std::shared_ptr<process::Event>(parent, &_valueChangedEvent)) ||
+		function(model::Attribute::kQuality, std::shared_ptr<process::Event>(parent, &_qualityChangedEvent)) ||
+		function(process::Event::kChanged, std::shared_ptr<process::Event>(parent, &_changedEvent));
 }
 
 template <std::regular DataType>
-auto ReadState<DataType>::readHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
+auto ReadState<DataType>::makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
 {
-	// Try reach readable attribute
+	// Try each readable attribute
 	if (attribute == model::Attribute::kUpdateTime)
 	{
 		return _dataBlock.member(&State::_updateTime);
@@ -150,5 +139,6 @@ template class ReadState<std::int32_t>;
 template class ReadState<std::int64_t>;
 template class ReadState<float>;
 template class ReadState<double>;
+template class ReadState<std::string>;
 
 } // namespace xentara::plugins::templateDriver

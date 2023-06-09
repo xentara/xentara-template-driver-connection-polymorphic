@@ -2,10 +2,16 @@
 #include "TemplateOutput.hpp"
 
 #include "AbstractTemplateOutputHandler.hpp"
+#include "Tasks.hpp"
 #include "TemplateOutputHandler.hpp"
 
+#include <xentara/config/FallbackHandler.hpp>
 #include <xentara/data/ReadHandle.hpp>
 #include <xentara/data/WriteHandle.hpp>
+#include <xentara/model/Attribute.hpp>
+#include <xentara/model/ForEachAttributeFunction.hpp>
+#include <xentara/model/ForEachEventFunction.hpp>
+#include <xentara/model/ForEachTaskFunction.hpp>
 #include <xentara/utils/json/decoder/Object.hpp>
 #include <xentara/utils/json/decoder/Errors.hpp>
 
@@ -19,7 +25,7 @@ TemplateOutput::Class TemplateOutput::Class::_instance;
 auto TemplateOutput::loadConfig(const ConfigIntializer &initializer,
 		utils::json::decoder::Object &jsonObject,
 		config::Resolver &resolver,
-		const FallbackConfigHandler &fallbackHandler) -> void
+		const config::FallbackHandler &fallbackHandler) -> void
 {
 	// Get a reference that allows us to modify our own config attributes
     auto &&configAttributes = initializer[Class::instance().configHandle()];
@@ -119,6 +125,10 @@ auto TemplateOutput::createHandler(utils::json::decoder::Value &value) -> std::u
 	{
 		return std::make_unique<TemplateOutputHandler<double>>();
 	}
+	else if (keyword == "string"sv)
+	{
+		return std::make_unique<TemplateOutputHandler<std::string>>();
+	}
 
 	// The keyword is not known
 	else
@@ -186,65 +196,51 @@ auto TemplateOutput::directions() const -> io::Directions
 	return io::Direction::Input | io::Direction::Output;
 }
 
-auto TemplateOutput::resolveAttribute(std::string_view name) -> const model::Attribute *
+auto TemplateOutput::forEachAttribute(const model::ForEachAttributeFunction &function) const -> bool
 {
-	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
+	// forEachAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::resolveAttribute() called before configuration has been loaded");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::forEachAttribute() called before configuration has been loaded");
 	}
 
-	// Check the handler attributes
-	if (auto attribute = _handler->resolveAttribute(name))
-	{
-		return attribute;
-	}
+	return
+		// Handle the handler attributes
+		_handler->forEachAttribute(function);
 
-	/// @todo add any additional attributes this class supports, including attributes inherited from the I/O component
-
-	return nullptr;
+	/// @todo handle any additional attributes this class supports, including attributes inherited from the I/O component
 }
 
-auto TemplateOutput::resolveTask(std::string_view name) -> std::shared_ptr<process::Task>
+auto TemplateOutput::forEachEvent(const model::ForEachEventFunction &function) -> bool
 {
-	if (name == "read"sv)
-	{
-		return std::shared_ptr<process::Task>(sharedFromThis(), &_readTask);
-	}
-	else if (name == "write"sv)
-	{
-		return std::shared_ptr<process::Task>(sharedFromThis(), &_writeTask);
-	}
-
-	/// @todo add any additional tasks this class supports
-
-	return nullptr;
-}
-
-auto TemplateOutput::resolveEvent(std::string_view name) -> std::shared_ptr<process::Event>
-{
-	// resolveAttribute() must not be called before the configuration was loaded, so the handler should have been
+	// forEachAttribute() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
-		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::resolveEvent() called before configuration has been loaded");
+		throw std::logic_error("internal error: xentara::plugins::templateDriver::TemplateOutput::forEachEvent() called before configuration has been loaded");
 	}
 
-	// Check the handler events
-	if (auto event = _handler->resolveEvent(name, sharedFromThis()))
-	{
-		return event;
-	}
+	return
+		// Handle the handler events
+		_handler->forEachEvent(function, sharedFromThis());
 
-	/// @todo add any additional events this class supports, including events inherited from the I/O component
-
-	return nullptr;
+	/// @todo handle any additional events this class supports, including events inherited from the I/O component
 }
 
-auto TemplateOutput::readHandle(const model::Attribute &attribute) const noexcept -> data::ReadHandle
+auto TemplateOutput::forEachTask(const model::ForEachTaskFunction &function) -> bool
 {
-	// readHandle() must not be called before the configuration was loaded, so the handler should have been
+	// Handle all the tasks we support
+	return
+		function(tasks::kRead, sharedFromThis(&_readTask)) ||
+		function(tasks::kWrite, sharedFromThis(&_writeTask));
+
+	/// @todo handle any additional tasks this class supports
+}
+
+auto TemplateOutput::makeReadHandle(const model::Attribute &attribute) const noexcept -> std::optional<data::ReadHandle>
+{
+	// makeReadHandle() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
@@ -252,20 +248,20 @@ auto TemplateOutput::readHandle(const model::Attribute &attribute) const noexcep
 		return std::make_error_code(std::errc::invalid_argument);
 	}
 
-	// Check the handler attributes
-	if (auto handle = _handler->readHandle(attribute))
+	// Handle the handler attributes
+	if (auto handle = _handler->makeReadHandle(attribute))
 	{
-		return *handle;
+		return handle;
 	}
 
-	/// @todo add any additional readable attributes this class supports, including attributes inherited from the I/O component
+	/// @todo handle any additional readable attributes this class supports, including attributes inherited from the I/O component
 
-	return data::ReadHandle::Error::Unknown;
+	return std::nullopt;
 }
 
-auto TemplateOutput::writeHandle(const model::Attribute &attribute) noexcept -> data::WriteHandle
+auto TemplateOutput::makeWriteHandle(const model::Attribute &attribute) noexcept -> std::optional<data::WriteHandle>
 {
-	// writeHandle() must not be called before the configuration was loaded, so the handler should have been
+	// makeWriteHandle() must not be called before the configuration was loaded, so the handler should have been
 	// created already.
 	if (!_handler) [[unlikely]]
 	{
@@ -273,15 +269,15 @@ auto TemplateOutput::writeHandle(const model::Attribute &attribute) noexcept -> 
 		return std::make_error_code(std::errc::invalid_argument);
 	}
 
-	// Check the handler attributes
-	if (auto handle = _handler->writeHandle(attribute, sharedFromThis()))
+	// Handle the handler attributes
+	if (auto handle = _handler->makeWriteHandle(attribute, sharedFromThis()))
 	{
-		return *handle;
+		return handle;
 	}
 
-	/// @todo add any additional writable attributes this class supports, including attributes inherited from the I/O component
+	/// @todo handle any additional writable attributes this class supports, including attributes inherited from the I/O component
 
-	return data::WriteHandle::Error::Unknown;
+	return std::nullopt;
 }
 
 auto TemplateOutput::realize() -> void
