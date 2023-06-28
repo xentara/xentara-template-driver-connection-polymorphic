@@ -62,9 +62,9 @@ private:
 		std::error_code _writeError;
 	};
 
-	/// @brief A Xentara event that is fired when the value was successfully written
+	/// @brief A Xentara event that is raised when the value was successfully written
 	process::Event _writtenEvent { io::Direction::Output };
-	/// @brief A Xentara event that is fired when a write error occurred
+	/// @brief A Xentara event that is raised when a write error occurred
 	process::Event _writeErrorEvent { io::Direction::Output };
 
 	/// @brief The data block that contains the state

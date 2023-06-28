@@ -78,7 +78,7 @@ private:
 		std::error_code _error { CustomError::NotConnected };
 	};
 
-	/// @brief A summary event that is fired when anything changes
+	/// @brief A summary event that is raised when anything changes
 	process::Event _changedEvent { io::Direction::Input };
 
 	/// @brief The data block that contains the state
