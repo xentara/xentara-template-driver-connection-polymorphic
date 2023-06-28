@@ -5,6 +5,7 @@
 
 #include <xentara/memory/memoryResources.hpp>
 #include <xentara/memory/WriteSentinel.hpp>
+#include <xentara/process/EventList.hpp>
 
 namespace xentara::plugins::templateDriver
 {
@@ -25,8 +26,6 @@ auto ReadState<DataType>::forEachEvent(const model::ForEachEventFunction &functi
 {
 	// Handle all the events we support
 	return
-		function(model::Attribute::kValue, std::shared_ptr<process::Event>(parent, &_valueChangedEvent)) ||
-		function(model::Attribute::kQuality, std::shared_ptr<process::Event>(parent, &_qualityChangedEvent)) ||
 		function(process::Event::kChanged, std::shared_ptr<process::Event>(parent, &_changedEvent));
 }
 
@@ -105,25 +104,18 @@ auto ReadState<DataType>::update(std::chrono::system_clock::time_point timeStamp
 	const auto changed = valueChanged || qualityChanged || errorChanged;
 
 	// Update the change time, if necessary. We always need to write the change time, even if it is the same as before,
-	// because the memory resource might use swap-in.
+	// because memory resources use swap-in.
 	state._changeTime = changed ? timeStamp : oldState._changeTime;
 
-	// Commit the data before sending the events
-	sentinel.commit();
-
-	// Fire the correct events
-	if (valueChanged)
-	{
-		_valueChangedEvent.fire();
-	}
-	if (qualityChanged)
-	{
-		_qualityChangedEvent.fire();
-	}
+	// Collect the events to raise
+	process::StaticEventList<1> events;
 	if (changed)
 	{
-		_changedEvent.fire();
+		events.push_back(_changedEvent);
 	}
+
+	// Commit the data and raise the events
+	sentinel.commit(timeStamp, events);
 }
 
 /// @class xentara::plugins::templateDriver::ReadState

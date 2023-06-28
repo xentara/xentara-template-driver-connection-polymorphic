@@ -6,6 +6,7 @@
 
 #include <xentara/memory/memoryResources.hpp>
 #include <xentara/memory/WriteSentinel.hpp>
+#include <xentara/process/EventList.hpp>
 
 #include <string_view>
 
@@ -60,18 +61,11 @@ auto WriteState::update(std::chrono::system_clock::time_point timeStamp, std::er
 	// Update the state
 	state._writeTime = timeStamp;
 	state._writeError = error;
-	// Commit the data before sending the event
-	sentinel.commit();
 
-	// Fire the correct event
-	if (!error)
-	{
-		_writtenEvent.fire();
-	}
-	else
-	{
-		_writeErrorEvent.fire();
-	}
+	// Determine the correct event
+	const auto &event = error ? _writeErrorEvent : _writtenEvent;
+	// Commit the data and raise the event
+	sentinel.commit(timeStamp, event);
 }
 
 } // namespace xentara::plugins::templateDriver

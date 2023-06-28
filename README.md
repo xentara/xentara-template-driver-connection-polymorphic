@@ -75,8 +75,6 @@ The template code has the following features:
 - The data type of the value is configurable in the [model.json](https://docs.xentara.io/xentara/xentara_model_file.html) file.
 - The input publishes a [Xentara task](https://docs.xentara.io/xentara/xentara_element_members.html#xentara_tasks) called *read*,
   which acquires the current value from the physical device using a read command.
-- The input publishes [Xentara events](https://docs.xentara.io/xentara/xentara_element_members.html#xentara_events) to signal changes
-  to the value and [quality](https://docs.xentara.io/xentara/xentara_quality.html).
 - If a communication breakdown is detected during a read command, the I/O component is notified, and all other skill data points are invalidated.
 - No communication with the physical device is attempted if the connection is not up.
 
@@ -98,8 +96,6 @@ The template code has the following features:
   This allows the user to fine-tune when and how often write commands are sent, and to coordinate reads and writes.
 - The output publishes a [Xentara task](https://docs.xentara.io/xentara/xentara_element_members.html#xentara_tasks) called *read*,
   which acquires the current value from the physical device using a read command.
-- The output publishes [Xentara events](https://docs.xentara.io/xentara/xentara_element_members.html#xentara_events) to signal changes
-  to the value and [quality](https://docs.xentara.io/xentara/xentara_quality.html).
 - The output publishes a [Xentara task](https://docs.xentara.io/xentara/xentara_element_members.html#xentara_tasks) called *write*,
   which checks if an output value is pending, and writes it to the physical device using a write command, if necessary.
 - The output publishes [Xentara events](https://docs.xentara.io/xentara/xentara_element_members.html#xentara_events) to signal if
