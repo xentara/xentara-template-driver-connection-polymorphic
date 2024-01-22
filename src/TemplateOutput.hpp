@@ -62,8 +62,6 @@ public:
 
 	auto makeWriteHandle(const model::Attribute &attribute) noexcept -> std::optional<data::WriteHandle> final;
 
-	auto realize() -> void final;
-
 	/// @}
 
 	/// @name Virtual Overrides for TemplateIoComponent::ErrorSink
@@ -118,6 +116,8 @@ private:
 	/// @{
 
 	auto load(utils::json::decoder::Object &jsonObject, config::Context &context) -> void final;
+
+	auto realize() -> void final;
 
 	/// @}
 
