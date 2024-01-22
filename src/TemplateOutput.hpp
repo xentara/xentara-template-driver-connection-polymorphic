@@ -82,16 +82,6 @@ public:
 
 	/// @}
 
-protected:
-	/// @name Virtual Overrides for skill::DataPoint
-	/// @{
-
-	auto load(utils::json::decoder::Object &jsonObject,
-		config::Resolver &resolver,
-		const config::FallbackHandler &fallbackHandler) -> void final;
-
-	/// @}
-
 private:
 	// The tasks need access to out private member functions
 	friend class ReadTask<TemplateOutput>;
@@ -123,6 +113,13 @@ private:
 
 	/// @brief Invalidates any read data
 	auto invalidateData(std::chrono::system_clock::time_point timeStamp) -> void;
+
+	/// @name Virtual Overrides for skill::DataPoint
+	/// @{
+
+	auto load(utils::json::decoder::Object &jsonObject, config::Context &context) -> void final;
+
+	/// @}
 
 	/// @brief The I/O component this output belongs to
 	/// @todo give this a more descriptive name, e.g. "_device"
