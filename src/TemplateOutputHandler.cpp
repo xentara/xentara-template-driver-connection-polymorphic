@@ -119,7 +119,7 @@ template <typename ValueType>
 auto TemplateOutputHandler<ValueType>::write(std::chrono::system_clock::time_point timeStamp, ErrorSink &errorSink) -> void
 {
 	// Get the value
-	auto pendingValue = _pendingOutputValue.dequeue();
+	auto pendingValue = _pendingOutputValue.pop();
 	// If there was no pending value, just bail
 	if (!pendingValue)
 	{

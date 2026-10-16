@@ -5,7 +5,6 @@
 #include "ReadState.hpp"
 #include "WriteState.hpp"
 #include "ReadTask.hpp"
-#include "SingleValueQueue.hpp"
 #include "WriteTask.hpp"
 #include "AbstractTemplateOutputHandler.hpp"
 
